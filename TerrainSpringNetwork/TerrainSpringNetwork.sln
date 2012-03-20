@@ -1,0 +1,29 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TerrainSpringNetwork", "TerrainSpringNetwork.vcproj", "{4C965103-82E4-4B08-9862-AFC764CF20D9}"
+	ProjectSection(ProjectDependencies) = postProject
+		{EA86D611-2DCF-4E58-B580-F097FD465FEE} = {EA86D611-2DCF-4E58-B580-F097FD465FEE}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MicroSDK", "..\MicroSDK\MicroSDK.vcproj", "{EA86D611-2DCF-4E58-B580-F097FD465FEE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4C965103-82E4-4B08-9862-AFC764CF20D9}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4C965103-82E4-4B08-9862-AFC764CF20D9}.Debug|Win32.Build.0 = Debug|Win32
+		{4C965103-82E4-4B08-9862-AFC764CF20D9}.Release|Win32.ActiveCfg = Release|Win32
+		{4C965103-82E4-4B08-9862-AFC764CF20D9}.Release|Win32.Build.0 = Release|Win32
+		{EA86D611-2DCF-4E58-B580-F097FD465FEE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{EA86D611-2DCF-4E58-B580-F097FD465FEE}.Debug|Win32.Build.0 = Debug|Win32
+		{EA86D611-2DCF-4E58-B580-F097FD465FEE}.Release|Win32.ActiveCfg = Release|Win32
+		{EA86D611-2DCF-4E58-B580-F097FD465FEE}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
