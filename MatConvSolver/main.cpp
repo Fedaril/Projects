@@ -346,10 +346,10 @@ void main()
 
 	eSMaterialConvertionData* pTestData;
 
-	//pTestData = CreateFromXinfo("ANT.xinfo", iTestStartX, iTestStartY, iTestSizeX, iTestSizeY);
+	//pTestData = CreateFromXinfo("media/ANT.xinfo", iTestStartX, iTestStartY, iTestSizeX, iTestSizeY);
 	//pTestData = CreateFromConvData("mat_conv.dat", iTestStartX, iTestStartY, iTestSizeX, iTestSizeY);
 
-	const char* szSourceFile = "ANT.hmap";
+	const char* szSourceFile = "media/ANT.hmap";
 	pTestData = CreateFromHmapData(szSourceFile, 1024, 1024, iTestStartX, iTestStartY, iTestSizeX, iTestSizeY);
 
 	TerrainMaterialCSP oCSP;
