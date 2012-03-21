@@ -349,7 +349,7 @@ void main()
 	//pTestData = CreateFromXinfo("media/ANT.xinfo", iTestStartX, iTestStartY, iTestSizeX, iTestSizeY);
 	//pTestData = CreateFromConvData("mat_conv.dat", iTestStartX, iTestStartY, iTestSizeX, iTestSizeY);
 
-	const char* szSourceFile = "media/ANT.hmap";
+	const char* szSourceFile = "media/SWC.hmap";
 	pTestData = CreateFromHmapData(szSourceFile, 1024, 1024, iTestStartX, iTestStartY, iTestSizeX, iTestSizeY);
 
 	TerrainMaterialCSP oCSP;

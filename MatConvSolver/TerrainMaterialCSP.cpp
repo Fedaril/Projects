@@ -289,12 +289,13 @@ bool TerrainMaterialCSP::ProcessNodeList(std::vector<Node*>& a_arrNode)
 					continue;
 				}
 
-				//
-				iTotalCost += m_arrChangeList.back().m_oPermutation.m_iCost;
+				//				
 				break;
 
 			} while (true);
 		}
+
+		iTotalCost += m_arrChangeList.back().m_oPermutation.m_iCost;
 
 		iNodeProcessedCount++;
 
@@ -1029,6 +1030,7 @@ bool TerrainMaterialCSP::UpdateNeighborhood(ChangeList& a_rChangeList, const Nod
 		// inconsistency: no valid permutation left
 		if (pNeighbor->m_arrPermutation.GetCount() == 0)
 		{
+			Util::PrintMessage("Failed on Neighbor tile %d:%d/%d/%d\n", pNeighbor->m_eType, pNeighbor->m_iLodLevel, pNeighbor->m_iPosX, pNeighbor->m_iPosY);
 			pNeighbor->m_arrPermutation.SetCount(iPreviousPermutationCount);
 			return false;
 		}

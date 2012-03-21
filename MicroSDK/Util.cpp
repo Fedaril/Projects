@@ -25,6 +25,7 @@ void PrintMessage(const char* a_szMessage, ...)
 
 	//MessageBoxA(NULL, szBuffer, "Message", MB_OK);
 	OutputDebugStringA(szBuffer);
+	printf("%s", szBuffer);
 
 	va_end(arglist);
 }
