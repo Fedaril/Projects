@@ -492,7 +492,7 @@ void PatchQuadTree::CreateResources()
 	}
 
 
-	//FromXinfo("media\\ANT.xinfo");
+	FromXinfo("media\\ANT.xinfo");
 	FromSolverResult("media\\result_ANT.hmap_crop_0_0_1025_1025_e_30307_c_1827.bin", 1024, 1827);
 
 	m_eVertexWeightLayout = VertexWeightLayout_Solver;
@@ -533,7 +533,13 @@ void PatchQuadTree::Initialize()
 }
 
 
+void PatchQuadTree::SetVertexWeightLayout(VertexWeightLayout a_eVertexWeightLayout)
+{
+	m_eVertexWeightLayout = a_eVertexWeightLayout;
 
+	m_oTileList.Clear();
+	m_oTileList.Initialize(s_iTileListCapacity, m_oData[m_eVertexWeightLayout].m_pTileMaterialDataIndexArray, s_iLodLevelCount, m_iHeightmapTileDimension);
+}
 
 
 void PatchQuadTree::SetWorldScale(float a_fPositionScale, float a_fHeightScale, float a_fSlopeScale)

@@ -146,6 +146,7 @@ public:
 
 	const HeightMapData*	GetHeightmapData() const;
 
+	VertexWeightLayout		GetVertexWeightLayout() const;
 	void					SetVertexWeightLayout(VertexWeightLayout a_eVertexWeightLayout);
 };
 
@@ -186,7 +187,7 @@ inline const HeightMapData* PatchQuadTree::GetHeightmapData() const
 	return m_pHeightmapData;
 }
 
-inline void PatchQuadTree::SetVertexWeightLayout(VertexWeightLayout a_eVertexWeightLayout)
+inline VertexWeightLayout PatchQuadTree::GetVertexWeightLayout() const
 {
-	m_eVertexWeightLayout = a_eVertexWeightLayout;
+	return m_eVertexWeightLayout;
 }

@@ -468,7 +468,7 @@ void Update()
 		{
 			switch (arrTriggeredAction[i])
 			{
-			case QuadTreeActionId_MoveForward:
+				case QuadTreeActionId_MoveForward:
 					fGridScale += fZoomStep; 
 					break;
 				case QuadTreeActionId_MoveBackward:
@@ -555,6 +555,7 @@ void Update()
 		float fTranslationY = 0.0f;
 		float fTranslationZ = 0.0f;
 
+		VertexWeightLayout eLayout = oQuadTree.GetVertexWeightLayout();
 
 		for (unsigned int i = 0; i < iTrigerredActionCount; ++i)
 		{
@@ -591,11 +592,13 @@ void Update()
 					fCameraPitch -= fRotationSpeed;
 					break;
 
-				case QuadTreeActionId_Action1:
-					if (fOffsetScale == 1.0f)
-						fOffsetScale = 0.0f;
+				case QuadTreeActionId_Action1:					
+					if (eLayout == VertexWeightLayout_Solver)
+						eLayout = VertexWeightLayout_Xinfo;
 					else
-						fOffsetScale = 1.0f;
+						eLayout = VertexWeightLayout_Solver;
+
+					oQuadTree.SetVertexWeightLayout(eLayout);
 					break;
 				case QuadTreeActionId_Action2:
 					if (fShowOffset == 1.0f)

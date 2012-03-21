@@ -88,6 +88,7 @@ void eCTerrainTileList::Clear()
 	if (m_pTiles != NULL)
 	{
 		GE_FREE(m_pTiles);
+		
 	}
 
 	if (m_pActiveList1 != NULL)
@@ -101,6 +102,7 @@ void eCTerrainTileList::Clear()
 	}
 
 
+	m_pTiles					= NULL;
 	m_pActiveList				= NULL;
 	m_pActiveList1				= NULL;
 	m_pActiveList2				= NULL;
