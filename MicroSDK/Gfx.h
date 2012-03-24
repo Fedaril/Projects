@@ -2,9 +2,8 @@
 
 #pragma once
 
-#include "wtypes.h"
-
-
+namespace MicroSDK
+{
 namespace Gfx
 {
 
@@ -123,7 +122,7 @@ void	SaveBufferAsDDS(void* a_pData, unsigned int a_iDataPitch, unsigned int a_iW
 
 
 //
-void	InitializeD3D(HWND a_hWnd, RECT a_wr);
+void	InitializeD3D(unsigned int a_iWidth, unsigned int a_iHeight);
 void	ShutdownD3D();
 
 
@@ -183,3 +182,4 @@ void	DrawVertices(unsigned int a_iVertexCount);
 void	DrawIndexedVertices(IndexBuffer* a_pIndexBuffer, unsigned int a_iIndexStart, unsigned int a_iIndexCount);
 
 } // namespace Gfx
+} // namespace MicroSDK

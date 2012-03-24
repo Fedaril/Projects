@@ -4,8 +4,9 @@
 #include "TerrainMaterialCSP.h"
 #include <algorithm>
 #include <set>
+#include "MicroSDK/Timer.h"
 
-#include "Timer.h"
+using namespace MicroSDK;
 
 
 /*
@@ -182,7 +183,7 @@ void TerrainMaterialCSP::CreateNodeList(std::vector<Node*>& a_arrNode)
 
 bool TerrainMaterialCSP::ProcessNodeList(std::vector<Node*>& a_arrNode)
 {
-	Util::Timer oTimer;
+	MicroSDK::Timer oTimer;
 	DOUBLE fCumulatedTime = 0.0;
 	DOUBLE fOutputTimeThreshold = 10.0;
 

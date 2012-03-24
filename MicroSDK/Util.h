@@ -3,6 +3,8 @@
 
 #include "intrin.h"
 
+namespace MicroSDK
+{
 namespace Util
 {
 
@@ -28,17 +30,10 @@ template<typename T> T Clamp(T v, T min, T max);
 unsigned int CountLeadingZeros(unsigned int a_iValue);
 unsigned int CountBitSet(unsigned int a_iValue);
 
-} // namespace Util
-
-#define HALT_WITH_MSG(msg, ...)					do { Util::PrintMessage(msg, __VA_ARGS__); Util::Halt(); } while(false)
-#define HALT_IF(cond)							do { if (cond) Util::Halt(); } while (false)
-#define HALT_IF_FAILED(hr)						do { if (FAILED(hr)) Util::Halt(); } while(false)
-#define HALT_WITH_MSG_IF_FAILED(msg, ...)		do { if (FAILED(hr)) HALT_WITH_MSG(msg, __VA_ARGS__); } while(false)
-
 
 
 template<typename T>
-inline T Util::EndianSwapValue(T v)
+inline T EndianSwapValue(T v)
 {
 	char* pBuffer = (char*)&v;
 	for (unsigned int iByteIndex = 0; iByteIndex < sizeof(T) / 2; ++iByteIndex)
@@ -51,7 +46,7 @@ inline T Util::EndianSwapValue(T v)
 	return v;
 }
 template<typename T>
-inline T* Util::EndianSwapPointer(T* v)
+inline T* EndianSwapPointer(T* v)
 {
 	int iPtrValue = (int)T;
 	EndianSwapValue(iPtrValue);
@@ -59,45 +54,53 @@ inline T* Util::EndianSwapPointer(T* v)
 }
 
 template<typename T> 
-inline T Util::Abs(T v)
+inline T Abs(T v)
 {
 	return (v < (T)0) ? -v : v;
 }
 
 
 template<typename T> 
-inline T Util::Min(T v1, T v2)
+inline T Min(T v1, T v2)
 {
 	return (v1 < v2) ? v1 : v2;
 }
 
 template<typename T> 
-inline T Util::Max(T v1, T v2)
+inline T Max(T v1, T v2)
 {
 	return (v1 > v2) ? v1 : v2;
 }
 
 
 template<typename T> 
-inline T Util::Clamp(T v, T min, T max)
+inline T Clamp(T v, T min, T max)
 {
 	return Min(Max(v, min), max);
 }
 
-inline unsigned int Util::CountLeadingZeros(unsigned int a_iValue)
+inline unsigned int CountLeadingZeros(unsigned int a_iValue)
 {
 	unsigned long iIndex;
 	_BitScanReverse(&iIndex, a_iValue);
 	return 31 - iIndex;
 }
 
-inline unsigned int Util::CountBitSet(unsigned int a_iValue)
+inline unsigned int CountBitSet(unsigned int a_iValue)
 {
 	a_iValue = a_iValue - ((a_iValue >> 1) & 0x55555555);
 	a_iValue = (a_iValue & 0x33333333) + ((a_iValue >> 2) & 0x33333333);
 	return ((a_iValue + (a_iValue >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
 }
 
+
+} // namespace Util
+} // namespace MicroSDK
+
+#define HALT_WITH_MSG(msg, ...)					do { MicroSDK::Util::PrintMessage(msg, __VA_ARGS__); MicroSDK::Util::Halt(); } while(false)
+#define HALT_IF(cond)							do { if (cond) MicroSDK::Util::Halt(); } while (false)
+#define HALT_IF_FAILED(hr)						do { if (FAILED(hr)) MicroSDK::Util::Halt(); } while(false)
+#define HALT_WITH_MSG_IF_FAILED(msg, ...)		do { if (FAILED(hr)) HALT_WITH_MSG(msg, __VA_ARGS__); } while(false)
 
 
 #if !defined( NDEBUG )

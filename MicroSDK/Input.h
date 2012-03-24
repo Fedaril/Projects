@@ -2,6 +2,8 @@
 
 #pragma once
 
+namespace MicroSDK
+{
 namespace Input
 {
 
@@ -72,11 +74,14 @@ void		Shutdown();
 
 void		Update();
 
-void		HandleMessage(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
 void		RegisterKeyAction(Key a_eKey, KeyState a_eState, ActionId a_iActionId);
-
 unsigned	GetTriggeredActionList(ActionId* a_pDestBuffer, unsigned int a_iBufferSize);
 
 
-}
+//
+void		HandleKeyDownMessage( Key a_eKey );
+void		HandleKeyUpMessage( Key a_eKey );
+
+
+} // namespace Input
+} // namespace MicroSDK

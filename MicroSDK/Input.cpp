@@ -3,6 +3,8 @@
 
 #include "Input.h"
 
+namespace MicroSDK
+{
 namespace Input
 {
 
@@ -27,87 +29,6 @@ static const unsigned int KEY_IS_DOWN_MASK		= 0x01;
 unsigned int m_aKeys[Key_Count]; 
 
 bool IsKeyDown( BYTE key ) { return( (key & KEY_IS_DOWN_MASK) == KEY_IS_DOWN_MASK ); }
-
-
-Key MapKey( UINT nWinKey )
-{
-    // This could be upgraded to a method that's user-definable but for 
-    // simplicity, we'll use a hardcoded mapping.
-    switch( nWinKey )
-    {
-        case VK_CONTROL:
-            return Key_Control;
-        case VK_LEFT:
-            return Key_Left;
-        case VK_RIGHT:
-            return Key_Right;
-        case VK_UP:
-            return Key_Up;
-        case VK_DOWN:
-            return Key_Down;
-
-		case 13:
-			return Key_Enter;
-		case ' ':
-			return Key_Space;
-        case 'A':
-            return Key_A;
-        case 'B':
-            return Key_B;
-        case 'C':
-            return Key_C;
-        case 'D':
-            return Key_D;
-        case 'E':
-            return Key_E;
-        case 'F':
-            return Key_F;
-        case 'G':
-            return Key_G;
-        case 'H':
-            return Key_H;
-        case 'I':
-            return Key_I;
-        case 'J':
-            return Key_J;
-        case 'K':
-            return Key_K;
-        case 'L':
-            return Key_L;
-        case 'M':
-            return Key_M;
-        case 'N':
-            return Key_N;
-        case 'O':
-            return Key_O;
-        case 'P':
-            return Key_P;
-        case 'Q':
-            return Key_Q;
-        case 'R':
-            return Key_R;
-        case 'S':
-            return Key_S;
-        case 'T':
-            return Key_T;
-        case 'U':
-            return Key_U;
-        case 'V':
-            return Key_V;
-        case 'W':
-            return Key_W;
-        case 'X':
-            return Key_X;
-        case 'Y':
-            return Key_Y;
-        case 'Z':
-            return Key_Z;
-        case VK_HOME:
-            return Key_Home;
-    }
-
-    return Key_Invalid;
-}
 
 void TriggerKeyAction(Key a_eKey, KeyState a_eState)
 {
@@ -144,43 +65,21 @@ void Update()
 
 
 
-void HandleMessage( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
+void HandleKeyDownMessage( Key a_eKey )
 {
-    UNREFERENCED_PARAMETER( hWnd );
-    UNREFERENCED_PARAMETER( lParam );
-
-
-    switch( uMsg )
+    if (false == IsKeyDown(m_aKeys[a_eKey]))
     {
-        case WM_KEYDOWN:
-        {
-            Key eMappedKey = MapKey( ( UINT )wParam );
+		TriggerKeyAction(a_eKey, KeyState_Pressed);
 
-            if( eMappedKey != Key_Invalid )
-            {
-                if( false == IsKeyDown( m_aKeys[eMappedKey] ) )
-                {
-					TriggerKeyAction(eMappedKey, KeyState_Pressed);
+        m_aKeys[ a_eKey ] = KEY_IS_DOWN_MASK;                    
+    }				
+}
 
-                    m_aKeys[ eMappedKey ] = KEY_IS_DOWN_MASK;                    
-                }				
-            }
-            break;
-        }
-
-        case WM_KEYUP:
-        {
-            Key eMappedKey = MapKey( ( UINT )wParam );
-
-            if( eMappedKey != Key_Invalid )
-            {
-				TriggerKeyAction(eMappedKey, KeyState_Released);
-                m_aKeys[ eMappedKey ] &= ~KEY_IS_DOWN_MASK;                
-            }
-            break;
-        }
-
-    }
+void HandleKeyUpMessage( Key a_eKey )
+{
+	TriggerKeyAction(a_eKey, KeyState_Released);
+	m_aKeys[ a_eKey ] &= ~KEY_IS_DOWN_MASK;                
+			
 }
 
 
@@ -214,4 +113,5 @@ unsigned int GetTriggeredActionList(ActionId* a_pDestBuffer, unsigned int a_iBuf
 	return iCopySize;
 }
 
-}
+} // namespace Input
+} // namespace MicroSDK

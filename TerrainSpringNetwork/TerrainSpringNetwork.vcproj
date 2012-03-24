@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;E:\work\DXSDK\June210\Include&quot;;..\MicroSDK"
+				AdditionalIncludeDirectories="..\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				MinimalRebuild="true"
 				ExceptionHandling="0"
@@ -120,7 +120,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="&quot;E:\work\DXSDK\June210\Include&quot;;..\MicroSDK"
+				AdditionalIncludeDirectories="..\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				ExceptionHandling="0"
 				RuntimeLibrary="2"
@@ -217,10 +217,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\GenomeCompatibility.h"
-				>
-			</File>
-			<File
 				RelativePath=".\HeightmapData.h"
 				>
 			</File>
@@ -229,23 +225,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\QuadTree.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\QuadTree.h"
-				>
-			</File>
-			<File
-				RelativePath=".\QuadTreeTypes.h"
-				>
-			</File>
-			<File
-				RelativePath=".\TerrainTileList.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\TerrainTileList.h"
+				RelativePath=".\TerrainSpringNetworkApp.cpp"
 				>
 			</File>
 		</Filter>

@@ -3,7 +3,6 @@
 
 // http://msdl.microsoft.com/download/symbols
 
-#include "QuadTree.h"
 #include "ForceField2DSimulator.h"
 #include "HeightmapData.h"
 
@@ -12,14 +11,6 @@ Gfx::PixelShader*		pPixelShader	= NULL;
 Gfx::InputLayout*		pInputLayout	= NULL;
 Gfx::VertexBuffer*		pVertexBuffer	= NULL;
 Gfx::ConstantBuffer*	pConstantBuffer	= NULL;
-
-PatchQuadTree			oQuadTree;
-float					fQuadTreePosX = 0.0f;
-float					fQuadTreePosY = 50.0f;
-float					fQuadTreePosZ = 0.0f;
-
-float					fCameraPitch	= 0.0f;
-float					fCameraYaw		= 0.0f;
 
 
 float					fOffsetScale	= 1.0f;
@@ -31,38 +22,7 @@ float					fGridPosY	= 0.5f;
 
 Util::Timer				oFrameTimer;
 
-enum QuadTreeActionId
-{
-	QuadTreeActionId_MoveForward		= 1,
-	QuadTreeActionId_MoveBackward,
-	QuadTreeActionId_MoveLeft,
-	QuadTreeActionId_MoveRight,
-	QuadTreeActionId_MoveUp,
-	QuadTreeActionId_MoveDown,
-	QuadTreeActionId_ViewLeft,
-	QuadTreeActionId_ViewRight,
-	QuadTreeActionId_ViewUp,
-	QuadTreeActionId_ViewDown,
 
-	QuadTreeActionId_Action1,
-	QuadTreeActionId_Action2
-};
-
-
-//
-struct Color
-{
-	float m_fRed;
-	float m_fGreen;
-	float m_fBlue;
-};
-
-//
-struct Vertex
-{
-	ForceField2D::Vector2	m_vPosition;
-	Color					m_vColor;
-};
 
 const unsigned int iInputElementCount = 2;
 Gfx::InputLayoutElement	arrInputElement[iInputElementCount] =
@@ -321,12 +281,6 @@ void InitializeSimulation()
 	
 }
 
-void InitializeQuadTree()
-{
-	oQuadTree.Initialize();
-	oQuadTree.SetWorldScale(100.0f, 0.15f, 1.0f);
-}
-
 
 void UpdateForceFieldVertexBuffer()
 {
@@ -511,8 +465,6 @@ void Update()
 					Util::PrintMessage("Simulator ended with error: %f\n", g_arrSimulator[g_iSimulatorIndex].GetError());
 
 					CreateIndirectMap(pPositionArray, &g_oCropData, 1);
-
-					InitializeQuadTree();
 				}
 				else
 				{
@@ -545,84 +497,7 @@ void Update()
 	}
 	else
 	{
-		QuadTreeActionId arrTriggeredAction[128];
-		unsigned int iTrigerredActionCount = Input::GetTriggeredActionList((Input::ActionId*)&arrTriggeredAction, 128);
 
-		const float fStep = 500.0f * fFrameTime * 30.0f;
-		const float fRotationSpeed = 0.1f * 100.0f * fFrameTime;
-
-		float fTranslationX = 0.0f;
-		float fTranslationY = 0.0f;
-		float fTranslationZ = 0.0f;
-
-		VertexWeightLayout eLayout = oQuadTree.GetVertexWeightLayout();
-
-		for (unsigned int i = 0; i < iTrigerredActionCount; ++i)
-		{
-			switch (arrTriggeredAction[i])
-			{
-				case QuadTreeActionId_MoveForward:
-					fTranslationZ += fStep; 
-					break;
-				case QuadTreeActionId_MoveBackward:
-					fTranslationZ -= fStep; 
-					break;
-				case QuadTreeActionId_MoveLeft:
-					fTranslationX -= fStep; 
-					break;
-				case QuadTreeActionId_MoveRight:
-					fTranslationX += fStep; 
-					break;
-				case QuadTreeActionId_MoveUp:
-					fTranslationY -= fStep; 
-					break;
-				case QuadTreeActionId_MoveDown:
-					fTranslationY += fStep; 
-					break;
-				case QuadTreeActionId_ViewLeft:
-					fCameraYaw += fRotationSpeed;
-					break;
-				case QuadTreeActionId_ViewRight:
-					fCameraYaw -= fRotationSpeed;
-					break;
-				case QuadTreeActionId_ViewUp:
-					fCameraPitch += fRotationSpeed;
-					break;
-				case QuadTreeActionId_ViewDown:
-					fCameraPitch -= fRotationSpeed;
-					break;
-
-				case QuadTreeActionId_Action1:					
-					if (eLayout == VertexWeightLayout_Solver)
-						eLayout = VertexWeightLayout_Xinfo;
-					else
-						eLayout = VertexWeightLayout_Solver;
-
-					oQuadTree.SetVertexWeightLayout(eLayout);
-					break;
-				case QuadTreeActionId_Action2:
-					if (fShowOffset == 1.0f)
-						fShowOffset = 0.0f;
-					else
-						fShowOffset = 1.0f;
-					break;
-
-			}
-		}
-
-		D3DXMATRIX mMovementRotationY;
-		D3DXMatrixRotationY(&mMovementRotationY, -fCameraYaw);
-
-		D3DXVECTOR4 vMovement(fTranslationX, 0.0f, fTranslationZ, 0.0f);
-		D3DXVec4Transform(&vMovement, &vMovement, &mMovementRotationY);
-
-		fQuadTreePosX += vMovement.x;
-		fQuadTreePosY += fTranslationY;
-		fQuadTreePosZ += vMovement.z;
-
-		UpdateConstantBuffer();
-
-		oQuadTree.Update(fQuadTreePosX, fQuadTreePosY, fQuadTreePosZ, fCameraYaw, fCameraPitch);
 	}
 }
 
@@ -734,8 +609,7 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	Gfx::CreateConstantBuffer(16, &pConstantBuffer);	
 	UpdateConstantBuffer();
 
-	//InitializeSimulation();
-	InitializeQuadTree();
+	InitializeSimulation();	
 
 
 	MSG msg;

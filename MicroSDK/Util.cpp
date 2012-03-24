@@ -5,7 +5,9 @@
 #include "stdio.h"
 #include "windows.h"
 
-namespace Util 
+namespace MicroSDK
+{
+namespace Util
 {
 
 void Halt()
@@ -113,3 +115,4 @@ void AppendFile(const char* a_szFile, const void* a_pBuffer, unsigned int a_iBuf
 
 
 } // namespace Util
+} // namespace MicroSDK

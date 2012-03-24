@@ -2,13 +2,16 @@
 #include "StdAfx.h"
 
 #include "Gfx.h"
+#include "Util.h"
+#include "Internal.h"
 
 #include "windowsx.h"
 #include "d3d11.h"
 #include "d3dx11.h"
 
-#include "util.h"
 
+namespace MicroSDK
+{
 namespace Gfx
 {
 
@@ -65,16 +68,17 @@ struct Texture
 
 
 // global declarations
-IDXGISwapChain*				swapchain			= NULL;			// the pointer to the swap chain interface
-ID3D11Device*				dev					= NULL;				// the pointer to our Direct3D device interface
-ID3D11DeviceContext*		devcon				= NULL;				// the pointer to our Direct3D device context
-ID3D11RenderTargetView*		backbuffer			= NULL;			// global declaration
-ID3D11DepthStencilView*		depthbuffer			= NULL;
-ID3D11RasterizerState*		rasterizerState		= NULL;
-ID3D11DepthStencilState*	depthStencilState	= NULL;
+IDXGISwapChain*				g_pSwapchain			= NULL;			// the pointer to the swap chain interface
+ID3D11Device*				g_pDev					= NULL;				// the pointer to our Direct3D device interface
+ID3D11DeviceContext*		g_pDevcon				= NULL;				// the pointer to our Direct3D device context
+ID3D11RenderTargetView*		g_pBackbuffer			= NULL;			// global declaration
+ID3D11DepthStencilView*		g_pDepthbuffer			= NULL;
+ID3D11RasterizerState*		g_pRasterizerState		= NULL;
+ID3D11DepthStencilState*	g_pDepthStencilState	= NULL;
+ID3D11SamplerState*			g_arrSamplerState[SamplerFilter_Count][SamplerAddressMode_Count];
 
-ID3D11SamplerState*			arrSamplerState[SamplerFilter_Count][SamplerAddressMode_Count];
-
+unsigned int				g_iFrontBufferWidth		= 0;
+unsigned int				g_iFrontBufferHeight	= 0;
 
 void CompileShaderFromFile(const char* a_szFile, const char* a_szEntryPoint, const char* a_szProfile, ID3D10Blob** a_ppResult)
 {
@@ -177,7 +181,7 @@ inline D3D11_TEXTURE_ADDRESS_MODE GetD3D11AddressMode(SamplerAddressMode a_eAddr
 
 ID3D11SamplerState* GetSamplerState(SamplerFilter a_eFilter, SamplerAddressMode a_eAddressMode)
 {
-	ID3D11SamplerState* pSamplerState = arrSamplerState[a_eFilter][a_eAddressMode];
+	ID3D11SamplerState* pSamplerState = g_arrSamplerState[a_eFilter][a_eAddressMode];
 	HALT_IF(pSamplerState == NULL);
 	return pSamplerState;
 }
@@ -202,8 +206,14 @@ DXGI_FORMAT GetDxgiFormatFromSurfaceFormat(SurfaceFormat a_eFormat)
 
 
 
-void InitializeD3D(HWND hWnd, RECT wr)
+void InitializeD3D(unsigned int a_iWidth, unsigned int a_iHeight)
 {
+	HWND hWnd = g_hApplicationWindow;	
+
+	g_iFrontBufferWidth		= a_iWidth;
+	g_iFrontBufferHeight	= a_iHeight;
+
+	//
 	HRESULT hr;
 
 	// create a struct to hold information about the swap chain
@@ -229,22 +239,22 @@ void InitializeD3D(HWND hWnd, RECT wr)
 		NULL,
 		D3D11_SDK_VERSION,
 		&scd,
-		&swapchain,
-		&dev,
+		&g_pSwapchain,
+		&g_pDev,
 		NULL,
-		&devcon);
+		&g_pDevcon);
 
 	HALT_IF_FAILED(hr);
 
-	hr = swapchain->ResizeBuffers(2, 800, 600, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+	hr = g_pSwapchain->ResizeBuffers(2, a_iWidth, a_iHeight, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
 	HALT_IF_FAILED(hr);
 
 	// get the address of the back buffer
 	ID3D11Texture2D *pBackBuffer;
-	swapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
+	g_pSwapchain->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&pBackBuffer);
 
 	// use the back buffer address to create the render target
-	hr = dev->CreateRenderTargetView(pBackBuffer, NULL, &backbuffer);
+	hr = g_pDev->CreateRenderTargetView(pBackBuffer, NULL, &g_pBackbuffer);
 	HALT_IF_FAILED(hr);
 
 	pBackBuffer->Release();
@@ -252,8 +262,8 @@ void InitializeD3D(HWND hWnd, RECT wr)
 
 	//
 	D3D11_TEXTURE2D_DESC descDepth;
-	descDepth.Width					= wr.right - wr.left;
-	descDepth.Height				= wr.bottom - wr.top;
+	descDepth.Width					= a_iWidth;
+	descDepth.Height				= a_iHeight;
 	descDepth.MipLevels				= 1;
 	descDepth.ArraySize				= 1;
 	descDepth.Format				= DXGI_FORMAT_D32_FLOAT;
@@ -265,7 +275,7 @@ void InitializeD3D(HWND hWnd, RECT wr)
 	descDepth.MiscFlags				= 0;
 
 	ID3D11Texture2D* pDepthStencilBuffer = NULL;
-	hr = dev->CreateTexture2D(&descDepth, NULL, &pDepthStencilBuffer);
+	hr = g_pDev->CreateTexture2D(&descDepth, NULL, &pDepthStencilBuffer);
 	HALT_IF_FAILED(hr);
 
 	D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
@@ -279,7 +289,7 @@ void InitializeD3D(HWND hWnd, RECT wr)
 	descDSV.Texture2D.MipSlice = 0;
 
 	// Create the depth stencil view
-	hr = dev->CreateDepthStencilView(pDepthStencilBuffer, &descDSV, &depthbuffer);
+	hr = g_pDev->CreateDepthStencilView(pDepthStencilBuffer, &descDSV, &g_pDepthbuffer);
 	HALT_IF_FAILED(hr);
 
 
@@ -298,7 +308,7 @@ void InitializeD3D(HWND hWnd, RECT wr)
 	oRasterizerDesc.MultisampleEnable		= FALSE;
 	oRasterizerDesc.AntialiasedLineEnable	= FALSE;
 
-	hr = dev->CreateRasterizerState(&oRasterizerDesc, &rasterizerState);
+	hr = g_pDev->CreateRasterizerState(&oRasterizerDesc, &g_pRasterizerState);
 	HALT_IF_FAILED(hr);
 
 	//
@@ -322,7 +332,7 @@ void InitializeD3D(HWND hWnd, RECT wr)
 	oDepthStencilDesc.BackFace.StencilFunc			= D3D11_COMPARISON_NEVER;		
 
 
-	hr = dev->CreateDepthStencilState(&oDepthStencilDesc, &depthStencilState);
+	hr = g_pDev->CreateDepthStencilState(&oDepthStencilDesc, &g_pDepthStencilState);
 	HALT_IF_FAILED(hr);	
 
 
@@ -348,7 +358,7 @@ void InitializeD3D(HWND hWnd, RECT wr)
 			oDesc.MinLOD			= 0.0f;
 			oDesc.MaxLOD			= D3D11_FLOAT32_MAX;
 
-			hr = dev->CreateSamplerState(&oDesc, &arrSamplerState[iSamplerFilter][iSamplerAddressMode]);
+			hr = g_pDev->CreateSamplerState(&oDesc, &g_arrSamplerState[iSamplerFilter][iSamplerAddressMode]);
 			HALT_IF_FAILED(hr);	
 		}
 	}
@@ -361,17 +371,17 @@ void InitializeD3D(HWND hWnd, RECT wr)
 void ShutdownD3D()
 {
 	// close and release all existing COM objects
-	swapchain->Release();
-	backbuffer->Release();
-	dev->Release();
-	devcon->Release();
+	g_pSwapchain->Release();
+	g_pBackbuffer->Release();
+	g_pDev->Release();
+	g_pDevcon->Release();
 }
 
 
 void Begin()
 {
 	// set the render target as the back buffer
-	devcon->OMSetRenderTargets(1, &backbuffer, depthbuffer);
+	g_pDevcon->OMSetRenderTargets(1, &g_pBackbuffer, g_pDepthbuffer);
 
 	// Set the viewport
 	D3D11_VIEWPORT viewport;
@@ -379,17 +389,17 @@ void Begin()
 
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
-	viewport.Width = 800;
-	viewport.Height = 600;
+	viewport.Width = (FLOAT)g_iFrontBufferWidth;
+	viewport.Height = (FLOAT)g_iFrontBufferHeight;
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 
 
-	devcon->RSSetViewports(1, &viewport);
+	g_pDevcon->RSSetViewports(1, &viewport);
 
-	devcon->RSSetState(rasterizerState);	
-	devcon->OMSetDepthStencilState(depthStencilState, 0);
-	devcon->OMSetBlendState(NULL, NULL, 0xFFFFFFFF);
+	g_pDevcon->RSSetState(g_pRasterizerState);	
+	g_pDevcon->OMSetDepthStencilState(g_pDepthStencilState, 0);
+	g_pDevcon->OMSetBlendState(NULL, NULL, 0xFFFFFFFF);
 
 }
 
@@ -397,17 +407,17 @@ void Begin()
 void Present()
 {	
 	// switch the back buffer and the front buffer
-	swapchain->Present(0, 0);
+	g_pSwapchain->Present(0, 0);
 }
 
 
 void Clear(float arrColor[4])
 {
-	devcon->ClearRenderTargetView(backbuffer, arrColor);
+	g_pDevcon->ClearRenderTargetView(g_pBackbuffer, arrColor);
 
 	static float s_fClearDepth = 1.0f;
 
-	devcon->ClearDepthStencilView(depthbuffer, D3D11_CLEAR_DEPTH, s_fClearDepth, 0);
+	g_pDevcon->ClearDepthStencilView(g_pDepthbuffer, D3D11_CLEAR_DEPTH, s_fClearDepth, 0);
 }
 
 
@@ -423,7 +433,7 @@ void CreatePixelShaderFromFile(const char* a_szFile, const char* a_szEntryPoint,
 	const void*		pShaderBytecode	= pShaderData->GetBufferPointer();
 	SIZE_T			iBytecodeLength = pShaderData->GetBufferSize();
 
-	HRESULT hr = dev->CreatePixelShader(pShaderBytecode, iBytecodeLength, NULL, &pPS);
+	HRESULT hr = g_pDev->CreatePixelShader(pShaderBytecode, iBytecodeLength, NULL, &pPS);
 
 	HALT_IF_FAILED(hr);
 
@@ -444,7 +454,7 @@ void CreateVertexShaderFromFile(const char* a_szFile, const char* a_szEntryPoint
 	const void*				pShaderBytecode	= pShaderData->GetBufferPointer();
 	SIZE_T					iBytecodeLength = pShaderData->GetBufferSize();
 
-	HRESULT hr = dev->CreateVertexShader(pShaderBytecode, iBytecodeLength, NULL, &pVS);
+	HRESULT hr = g_pDev->CreateVertexShader(pShaderBytecode, iBytecodeLength, NULL, &pVS);
 
 	HALT_IF_FAILED(hr);
 
@@ -456,12 +466,12 @@ void CreateVertexShaderFromFile(const char* a_szFile, const char* a_szEntryPoint
 
 void SetVertexShader(VertexShader* a_pShader)
 {
-	devcon->VSSetShader(a_pShader->m_pShader, NULL, 0);
+	g_pDevcon->VSSetShader(a_pShader->m_pShader, NULL, 0);
 }
 
 void SetPixelShader(PixelShader* a_pShader)
 {
-	devcon->PSSetShader(a_pShader->m_pShader, NULL, 0);
+	g_pDevcon->PSSetShader(a_pShader->m_pShader, NULL, 0);
 }
 
 
@@ -487,7 +497,7 @@ void CreateInputLayout(InputLayoutElement* a_arrInputLayoutElement, unsigned int
 
 	ID3D11InputLayout* pInputLayout = NULL;
 
-	HRESULT hr = dev->CreateInputLayout(
+	HRESULT hr = g_pDev->CreateInputLayout(
 		arrElement, a_iElementCount, 
 		a_pVertexShader->m_pBlob->GetBufferPointer(), a_pVertexShader->m_pBlob->GetBufferSize(),
 		&pInputLayout);
@@ -502,13 +512,13 @@ void CreateInputLayout(InputLayoutElement* a_arrInputLayoutElement, unsigned int
 
 void SetInputLayout(InputLayout* a_pInputLayout)
 {
-	devcon->IASetInputLayout(a_pInputLayout->m_pLayout);
+	g_pDevcon->IASetInputLayout(a_pInputLayout->m_pLayout);
 }
 
 void SetInputPrimitive(InputPrimitive a_ePrimitive)
 {
 	D3D11_PRIMITIVE_TOPOLOGY eTopology = ConvertInputPrimitiveToD3D11Topology(a_ePrimitive);
-	devcon->IASetPrimitiveTopology(eTopology);
+	g_pDevcon->IASetPrimitiveTopology(eTopology);
 }
 
 //////////////
@@ -532,7 +542,7 @@ void CreateRenderTexture(SurfaceFormat a_eTextureFormat, SurfaceFormat a_eRender
 	oDesc.MiscFlags				= 0;
 
 	ID3D11Texture2D* pTexture2d = NULL;
-	HRESULT hr = dev->CreateTexture2D( &oDesc, NULL, &pTexture2d);
+	HRESULT hr = g_pDev->CreateTexture2D( &oDesc, NULL, &pTexture2d);
 	HALT_IF_FAILED(hr);
 
 	//
@@ -545,7 +555,7 @@ void CreateRenderTexture(SurfaceFormat a_eTextureFormat, SurfaceFormat a_eRender
 	oViewDesc.Texture2D.MostDetailedMip	= 0;
 
 	ID3D11ShaderResourceView* pShaderResourceView = NULL;
-	hr = dev->CreateShaderResourceView( pTexture2d, &oViewDesc, &pShaderResourceView );
+	hr = g_pDev->CreateShaderResourceView( pTexture2d, &oViewDesc, &pShaderResourceView );
 	HALT_IF_FAILED(hr);
 
 	//
@@ -557,7 +567,7 @@ void CreateRenderTexture(SurfaceFormat a_eTextureFormat, SurfaceFormat a_eRender
 	oRenderTargetDesc.Texture2D.MipSlice	= 0;
 
 	ID3D11RenderTargetView* pRenderTargetView = NULL;
-	hr = dev->CreateRenderTargetView( pTexture2d, &oRenderTargetDesc, &pRenderTargetView );
+	hr = g_pDev->CreateRenderTargetView( pTexture2d, &oRenderTargetDesc, &pRenderTargetView );
 	HALT_IF_FAILED(hr);
 
 
@@ -574,7 +584,7 @@ void CreateTextureFromFile(const char* a_szFile, Texture** a_ppTexture)
 {
 	ID3D11ShaderResourceView* pShaderResourceView = NULL;
 
-	HRESULT hr = D3DX11CreateShaderResourceViewFromFileA(dev, a_szFile, NULL, NULL, &pShaderResourceView, NULL);
+	HRESULT hr = D3DX11CreateShaderResourceViewFromFileA(g_pDev, a_szFile, NULL, NULL, &pShaderResourceView, NULL);
 	HALT_IF_FAILED(hr);
 	*a_ppTexture = (Texture*)calloc(1, sizeof(Texture));
 	(*a_ppTexture)->m_pShaderResourceView = pShaderResourceView;
@@ -601,7 +611,7 @@ void CreateDynamicTexture(SurfaceFormat a_eTextureFormat, unsigned int a_iWidth,
 	oDynamicDesc.MiscFlags				= 0;
 
 	ID3D11Texture2D* pTexture2d = NULL;
-	hr = dev->CreateTexture2D( &oDynamicDesc, NULL, &pTexture2d);
+	hr = g_pDev->CreateTexture2D( &oDynamicDesc, NULL, &pTexture2d);
 	HALT_IF_FAILED(hr);
 
 	//
@@ -614,7 +624,7 @@ void CreateDynamicTexture(SurfaceFormat a_eTextureFormat, unsigned int a_iWidth,
 	oViewDesc.Texture2D.MostDetailedMip	= 0;
 
 	ID3D11ShaderResourceView* pShaderResourceView = NULL;
-	hr = dev->CreateShaderResourceView( pTexture2d, &oViewDesc, &pShaderResourceView );
+	hr = g_pDev->CreateShaderResourceView( pTexture2d, &oViewDesc, &pShaderResourceView );
 	HALT_IF_FAILED(hr);
 
 	*a_ppTexture = (Texture*)calloc(1, sizeof(Texture));
@@ -630,7 +640,7 @@ void LockTexture(Texture* a_pDynamicTexture, LockInfo* a_pLock)
 	D3D11_MAPPED_SUBRESOURCE oMap;
 	ZeroMemory(&oMap, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	HRESULT hr = devcon->Map(a_pDynamicTexture->m_pDynamicTexture2d, 0, D3D11_MAP_WRITE_DISCARD, 0, &oMap);   // map the buffer
+	HRESULT hr = g_pDevcon->Map(a_pDynamicTexture->m_pDynamicTexture2d, 0, D3D11_MAP_WRITE_DISCARD, 0, &oMap);   // map the buffer
 	HALT_IF_FAILED(hr);
 
 	a_pLock->m_pData = oMap.pData;
@@ -641,7 +651,7 @@ void UnlockTexture(Texture* a_pDynamicTexture, LockInfo* a_pLock)
 {
 	HALT_IF(a_pDynamicTexture->m_pDynamicTexture2d == NULL);
 
-	devcon->Unmap(a_pDynamicTexture->m_pDynamicTexture2d, 0);
+	g_pDevcon->Unmap(a_pDynamicTexture->m_pDynamicTexture2d, 0);
 
 	a_pLock->m_iSize = 0;
 	a_pLock->m_pData = NULL;
@@ -670,10 +680,10 @@ void SaveBufferAsDDS(void* a_pData, unsigned int a_iDataPitch, unsigned int a_iW
 
 
 	ID3D11Texture2D* pTexture;
-	HRESULT hr = Gfx::dev->CreateTexture2D(&oDesc, &oInitialData, &pTexture);
+	HRESULT hr = Gfx::g_pDev->CreateTexture2D(&oDesc, &oInitialData, &pTexture);
 	HALT_IF_FAILED(hr);
 
-	hr = D3DX11SaveTextureToFileA(devcon, pTexture, D3DX11_IFF_DDS, a_szFile);
+	hr = D3DX11SaveTextureToFileA(g_pDevcon, pTexture, D3DX11_IFF_DDS, a_szFile);
 	HALT_IF_FAILED(hr);
 
 	pTexture->Release();
@@ -685,13 +695,13 @@ void SetSamplerTexture(unsigned int a_iIndex, Texture* a_pTexture)
 	if (a_pTexture != NULL)
 		pView = a_pTexture->m_pShaderResourceView;
 
-	devcon->PSSetShaderResources(a_iIndex, 1, &pView);
+	g_pDevcon->PSSetShaderResources(a_iIndex, 1, &pView);
 }
 
 void SetSamplerConfiguration(unsigned int a_iIndex, SamplerFilter a_eFilter, SamplerAddressMode a_eAddressMode)
 {
 	ID3D11SamplerState* pState = GetSamplerState(a_eFilter, a_eAddressMode);
-	devcon->PSSetSamplers(a_iIndex, 1, &pState);
+	g_pDevcon->PSSetSamplers(a_iIndex, 1, &pState);
 }
 
 
@@ -711,7 +721,7 @@ void CreateIndexBuffer(IndexType a_eIndexType, unsigned int a_iIndexCount, Index
 	oDesc.BindFlags			= D3D11_BIND_INDEX_BUFFER;				// use as a index buffer
 	oDesc.CPUAccessFlags	= D3D11_CPU_ACCESS_WRITE;				// allow CPU to write in buffer
 
-	HRESULT hr = dev->CreateBuffer(&oDesc, NULL, &pVBuffer);		// create the buffer
+	HRESULT hr = g_pDev->CreateBuffer(&oDesc, NULL, &pVBuffer);		// create the buffer
 	HALT_IF_FAILED(hr);
 
 	//
@@ -729,7 +739,7 @@ void LockIndexBuffer(IndexBuffer* a_pIndexBuffer, LockInfo* a_pLock)
 	D3D11_MAPPED_SUBRESOURCE oMap;
 	ZeroMemory(&oMap, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	HRESULT hr = devcon->Map(a_pIndexBuffer->m_pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &oMap);   // map the buffer
+	HRESULT hr = g_pDevcon->Map(a_pIndexBuffer->m_pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &oMap);   // map the buffer
 	HALT_IF_FAILED(hr);
 
 	a_pLock->m_pData = oMap.pData;
@@ -738,7 +748,7 @@ void LockIndexBuffer(IndexBuffer* a_pIndexBuffer, LockInfo* a_pLock)
 
 void UnlockIndexBuffer(IndexBuffer* a_pIndexBuffer, LockInfo* a_pLock)
 {
-	devcon->Unmap(a_pIndexBuffer->m_pBuffer, 0);
+	g_pDevcon->Unmap(a_pIndexBuffer->m_pBuffer, 0);
 
 	a_pLock->m_iSize = 0;
 	a_pLock->m_pData = NULL;
@@ -758,7 +768,7 @@ void CreateVertexBuffer(unsigned int a_iVertexSize, unsigned int a_iVertexCount,
 	oDesc.BindFlags			= D3D11_BIND_VERTEX_BUFFER;				// use as a vertex buffer
 	oDesc.CPUAccessFlags	= D3D11_CPU_ACCESS_WRITE;				// allow CPU to write in buffer
 
-	HRESULT hr = dev->CreateBuffer(&oDesc, NULL, &pVBuffer);					// create the buffer
+	HRESULT hr = g_pDev->CreateBuffer(&oDesc, NULL, &pVBuffer);					// create the buffer
 	HALT_IF_FAILED(hr);
 
 	//
@@ -775,7 +785,7 @@ void LockVertexBuffer(VertexBuffer* a_ppVertexBuffer, LockInfo* a_pLock)
 	D3D11_MAPPED_SUBRESOURCE oMap;
 	ZeroMemory(&oMap, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	HRESULT hr = devcon->Map(a_ppVertexBuffer->m_pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &oMap);   // map the buffer
+	HRESULT hr = g_pDevcon->Map(a_ppVertexBuffer->m_pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &oMap);   // map the buffer
 	HALT_IF_FAILED(hr);
 
 	a_pLock->m_pData = oMap.pData;
@@ -784,7 +794,7 @@ void LockVertexBuffer(VertexBuffer* a_ppVertexBuffer, LockInfo* a_pLock)
 
 void UnlockVertexBuffer(VertexBuffer* a_pVertexBuffer, LockInfo* a_pLock)
 {
-	devcon->Unmap(a_pVertexBuffer->m_pBuffer, 0);
+	g_pDevcon->Unmap(a_pVertexBuffer->m_pBuffer, 0);
 
 	a_pLock->m_iSize = 0;
 	a_pLock->m_pData = NULL;
@@ -806,7 +816,7 @@ void CreateConstantBuffer(unsigned int a_iConstantCount, ConstantBuffer** a_ppCo
 	oConstantBufferDesc.StructureByteStride	= 0;
 
 	ID3D11Buffer* pBuffer = NULL;
-	HRESULT hr = dev->CreateBuffer(&oConstantBufferDesc, NULL, &pBuffer);
+	HRESULT hr = g_pDev->CreateBuffer(&oConstantBufferDesc, NULL, &pBuffer);
 	HALT_IF_FAILED(hr);
 
 	//
@@ -820,7 +830,7 @@ void LockConstantBuffer(ConstantBuffer* a_pConstantBuffer, LockInfo* a_pLock)
 	D3D11_MAPPED_SUBRESOURCE oMap;
 	ZeroMemory(&oMap, sizeof(D3D11_MAPPED_SUBRESOURCE));
 
-	HRESULT hr = devcon->Map(a_pConstantBuffer->m_pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &oMap);
+	HRESULT hr = g_pDevcon->Map(a_pConstantBuffer->m_pBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &oMap);
 	HALT_IF_FAILED(hr);
 
 	a_pLock->m_pData		= oMap.pData;
@@ -829,7 +839,7 @@ void LockConstantBuffer(ConstantBuffer* a_pConstantBuffer, LockInfo* a_pLock)
 
 void UnlockConstantBuffer(ConstantBuffer* a_pConstantBuffer, LockInfo* a_pLock)
 {
-	devcon->Unmap(a_pConstantBuffer->m_pBuffer, 0);
+	g_pDevcon->Unmap(a_pConstantBuffer->m_pBuffer, 0);
 
 	a_pLock->m_iSize = 0;
 	a_pLock->m_pData = NULL;
@@ -843,31 +853,32 @@ void SetVertexBuffer(unsigned int a_iIndex, VertexBuffer* a_pBuffer)
 	UINT iOffset	= 0;
 	UINT iStride	= a_pBuffer->m_iVertexSize;
 
-	devcon->IASetVertexBuffers(0, 1, &a_pBuffer->m_pBuffer, &iStride, &iOffset);
+	g_pDevcon->IASetVertexBuffers(0, 1, &a_pBuffer->m_pBuffer, &iStride, &iOffset);
 }
 
 //
 void SetConstantBuffer(unsigned int a_iIndex, ConstantBuffer* a_pConstantBuffer)
 {
-	devcon->VSSetConstantBuffers(a_iIndex, 1, &a_pConstantBuffer->m_pBuffer);
-	devcon->PSSetConstantBuffers(a_iIndex, 1, &a_pConstantBuffer->m_pBuffer);
+	g_pDevcon->VSSetConstantBuffers(a_iIndex, 1, &a_pConstantBuffer->m_pBuffer);
+	g_pDevcon->PSSetConstantBuffers(a_iIndex, 1, &a_pConstantBuffer->m_pBuffer);
 }
 
 //
 void DrawVertices(unsigned int a_iVertexCount)
 {
-	devcon->Draw(a_iVertexCount, 0);
+	g_pDevcon->Draw(a_iVertexCount, 0);
 }
 
 void DrawIndexedVertices(IndexBuffer* a_pIndexBuffer, unsigned int a_iIndexStart, unsigned int a_iIndexCount)
 {
 	HALT_IF(a_iIndexCount >= a_pIndexBuffer->m_iIndexCount);
 
-	devcon->IASetIndexBuffer(a_pIndexBuffer->m_pBuffer, a_pIndexBuffer->m_iIndexFormat, 0);
-	devcon->DrawIndexed(a_iIndexCount, a_iIndexStart, 0);
+	g_pDevcon->IASetIndexBuffer(a_pIndexBuffer->m_pBuffer, a_pIndexBuffer->m_iIndexFormat, 0);
+	g_pDevcon->DrawIndexed(a_iIndexCount, a_iIndexStart, 0);
 }
 
 
 
 } // namespace Gfx
+} // namespace MicroSDK
  

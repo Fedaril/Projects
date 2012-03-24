@@ -148,10 +148,14 @@
 	</References>
 	<Files>
 		<Filter
-			Name="Source Files"
+			Name="src"
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\Application.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\Gfx.cpp"
 				>
@@ -161,15 +165,27 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Internal.h"
+				>
+			</File>
+			<File
+				RelativePath=".\Timer.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\Util.cpp"
 				>
 			</File>
 		</Filter>
 		<Filter
-			Name="Header Files"
+			Name="inc"
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\Application.h"
+				>
+			</File>
 			<File
 				RelativePath=".\Gfx.h"
 				>
